@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		 http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd">
+
+	<bean id="projProperties" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    	<property name="location" value="WEB-INF/system.properties" />
+ 	</bean>
+    
+    <bean id="ruleEngine" class="com.engine.RuleEngine">
+    	<constructor-arg type = "java.lang.String" value="ApprovalRule.drl"/>
+   	</bean>
+    
+    <!--START Dataservice, cache -->
+    <bean id="springUtil" class="com.utils.SpringUtil">
+   	</bean>
+    
+    <bean id="userCache" class="com.dataservice.UserCache">
+   	</bean>
+   	
+    <bean id="loanApplicationCache" class="com.dataservice.LoanApplicationCache">
+   	</bean>
+
+    <bean id="userDataService" class="com.dataservice.UserDataServiceImpl">
+   	</bean>
+
+    <bean id="loanApplicationDataService" class="com.dataservice.LoanApplicationDataServiceImpl">
+    		<constructor-arg ref="loanApplicationCache"/> 
+   	</bean>
+
+    <bean id="userPool" class="com.scheduler.UserPool">
+    	<constructor-arg ref="userDataService"/>
+   	</bean>
+
+    <!-- END Dataservice, cache -->
+
+    <!-- Define Strategies Start-->
+    <bean id="randomStrategy" class="com.scheduler.RandomStrategyImpl">
+    	<constructor-arg ref="userPool" />
+   	</bean>
+    
+    <bean id="roundRobinStrategy" class="com.scheduler.RoundRobinStrategyImpl">
+    	<constructor-arg ref="userPool" />
+   	</bean>
+   	
+    <!-- Define Strategies End-->
+
+	<!-- A Task bean definition with prototype scope -->
+	<bean id="allocationTask" class="com.task.AllocationTask" scope="prototype">
+		<constructor-arg ref="roundRobinStrategy"/>
+		<constructor-arg ref="loanApplicationDataService"/>
+		<constructor-arg ref="ruleEngine"/>
+	</bean>    
+
+	<bean id="randomAllocationTask" class="com.task.AllocationTask" scope="prototype">
+		<constructor-arg type="com.scheduler.AllocationStrategyInterface" ref="randomStrategy"/>
+		<constructor-arg ref="loanApplicationDataService"/>
+		<constructor-arg ref="ruleEngine"/>
+	</bean>    
+    
+    
+    <!--Start - Timer for checking the task deadline and reassignment -->
+	<bean id="deadlineTimerTask" class="com.scheduler.DeadlineManagerTimer">
+		<constructor-arg ref="loanApplicationDataService"/>
+		<constructor-arg ref="asynchTaskExecutorHandler"/>
+	</bean>
+	
+	<bean id="loanAssignmentService" class="com.controller.LoanAssignmentService">
+		<constructor-arg ref="asynchTaskExecutorHandler"/>
+	</bean>
+	
+
+    <context:component-scan base-package="com.websystique.spring.scheduling" />
+ 
+    <task:scheduled-tasks scheduler="myScheduler">
+        <task:scheduled ref="deadlineTimerTask" method="run" fixed-delay="10000" />
+    </task:scheduled-tasks>
+ 
+    <task:scheduler id="myScheduler"/>
+    
+	<!-- End Deadline Timer -->
+	
+	
+	<!-- Start Pool for executing the task assignment asynchronously -->
+	<bean id="assignTaskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+    	<property name="corePoolSize" value="5" />
+    	<property name="maxPoolSize" value="10" />
+    	<property name="queueCapacity" value="25" />
+	</bean>
+
+	<bean id="asynchTaskExecutorHandler" class="com.task.AsynchTaskExecutorHandler">
+    	<constructor-arg ref="assignTaskExecutor" />
+	</bean>
+	
+	<!-- End Async Pool -->
+</beans>

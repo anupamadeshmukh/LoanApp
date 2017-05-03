@@ -1,0 +1,70 @@
+package config;
+
+/**
+Multi-level approvals required for home loans, 
+
+i.e. loan being approved by an underwriter (UW), then by a risk officer(RO), 
+by the finance team (FT), etc.
+It should also be highly configurable. Example � A loan
+application flowing through various queues and disbursal
+happening after all the approvals.
+**/
+
+//UW, RO, FT, NONE
+
+import com.model.LoanApplication;
+import com.utils.AppConstants;
+
+dialect "java"
+rule "ApprovalUW"
+   
+	when
+		item:LoanApplication(currentUser.type == AppConstants.UserType.UW, 
+		currentStateTypeID==AppConstants.StateType.APPROVED)  
+	then
+		item.setNextUserTypeID(LoanApplication.UserType.RO);     
+end
+
+rule "RejectUW"
+   
+	when
+		item:LoanApplication(currentUser.type == AppConstants.UserType.UW, 
+		currentStateTypeID==AppConstants.StateType.REJECTED) 
+	then
+		item.setNextUserTypeID(LoanApplication.UserType.NONE);     
+end
+
+rule "ApprovalRO"
+
+	when
+		item:LoanApplication(currentUser.type == AppConstants.UserType.RO, 
+		currentStateTypeID==AppConstants.StateType.APPROVED)   
+	then
+		item.setNextUserTypeID(LoanApplication.UserType.FT);     
+end
+
+rule "RejectRO"
+   
+	when
+		item:LoanApplication(currentUser.type == AppConstants.UserType.RO, 
+		currentStateTypeID==AppConstants.StateType.REJECTED)  
+	then
+		item.setNextUserTypeID(LoanApplication.UserType.UW);     
+end
+
+rule "ApprovalFT"
+	when
+		item:LoanApplication(currentUser.type == AppConstants.UserType.FT, 
+		currentStateTypeID==AppConstants.StateType.APPROVED)   
+	then
+		item.setNextUserTypeID(LoanApplication.UserType.NONE);     
+end
+
+rule "RejectFT"
+   
+	when
+		item:LoanApplication(currentUser.type == AppConstants.UserType.FT, 
+		currentStateTypeID==AppConstants.StateType.REJECTED)  
+	then
+		item.setNextUserTypeID(LoanApplication.UserType.RO);     
+end

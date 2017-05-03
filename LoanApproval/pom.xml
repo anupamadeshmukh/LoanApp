@@ -1,0 +1,120 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>LoanApproval</groupId>
+  <artifactId>LoanApproval</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>war</packaging>
+
+  <name>LoanApproval</name>
+  <url>http://maven.apache.org</url>
+
+	<properties>
+    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>  
+
+	<parent>
+    <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.0.1.RELEASE</version>
+    </parent>
+
+	<dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter</artifactId>
+    	</dependency>
+	    
+	    <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+    	</dependency>
+        
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-test</artifactId>
+        	<scope>test</scope>
+    	</dependency>
+
+    	<!-- Drools engine -->
+    	<dependency>
+        	<groupId>org.drools</groupId>
+        	<artifactId>drools-core</artifactId>
+        	<version>5.4.0.Final</version>
+    	</dependency>
+
+    	<dependency>
+	        <groupId>org.drools</groupId>
+    	    <artifactId>drools-compiler</artifactId>
+        	<version>5.4.0.Final</version>
+    	</dependency>
+
+		<dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-all</artifactId>
+			<version>5.14.0</version>
+		</dependency>	
+	</dependencies>
+
+<build>	
+    	<plugins>
+        	<plugin>
+            	<artifactId>maven-resources-plugin</artifactId>
+            	<version>2.7</version>
+            	<executions>
+                	<execution>
+                    	<id>copy-resource-one</id>
+                    	<phase>install</phase>
+                    	<goals>
+                        	<goal>copy-resources</goal>
+                    	</goals>
+                    	<configuration>
+                    		<overwrite>true</overwrite>
+                        	<outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/</outputDirectory>
+                        	<resources>
+                            	<resource>
+                                	<directory>${project.basedir}/WebContent/webapp/WEB-INF/</directory>
+                            	</resource>
+                        	</resources>
+                    	</configuration>
+                	</execution>
+
+                	<execution>
+                    	<id>copy-resource-two</id>
+                    	<phase>install</phase>
+                    	<goals>
+                        	<goal>copy-resources</goal>
+                    	</goals>
+                    	<configuration>
+                    		<overwrite>true</overwrite>
+                        	<outputDirectory>${project.build.directory}/${project.artifactId}-${project.version}/WEB-INF/classes</outputDirectory>
+                        	<resources>
+                            	<resource>
+                                	<directory>${project.basedir}/config/</directory>
+                            	</resource>
+                        	</resources>
+                    	</configuration>
+                	</execution>
+
+
+           		</executions>
+
+
+
+        	</plugin>   
+    	</plugins>
+ </build>
+ 
+</project>
